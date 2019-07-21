@@ -17,8 +17,10 @@ from datetime import date as dateclass
 from zim.config import StringAllowEmpty
 
 # TODO: kern out unneccesary imports
-from zim.plugins import PluginClass, WindowExtension, extends
+from zim.plugins import PluginClass
 from zim.actions import action
+from zim.gui.pageview import PageViewExtension
+from zim.config import ConfigManager
 
 import logging
 
@@ -42,8 +44,7 @@ buttons.
 	)
 
 
-@extends('MainWindow')
-class MainWindowExtension(WindowExtension):
+class NowButtonMainWindowExtension(PageViewExtension):
 
 	uimanager_xml = '''
 		<ui>
@@ -62,18 +63,16 @@ class MainWindowExtension(WindowExtension):
 		</ui>
 	'''
 
-	def __init__(self, plugin, window):
-		WindowExtension.__init__(self, plugin, window)
+	def __init__(self, plugin, pageview):
+		PageViewExtension.__init__(self, plugin, pageview)
 
 	@action(
 		_('Log Entry'),
-		stock=gtk.STOCK_JUMP_TO,
-		readonly=True,
-		accelerator = '<Control><Shift>E'
+		'<Primary><Shift>E'
 	) # T: menu item
 	def now_button_clicked(self):
 
-		calendar_config=self.plugin.config.get_config_dict('<profile>/preferences.conf')['CalendarPlugin'];
+		calendar_config=ConfigManager.preferences['JournalPlugin'];
 		calendar_namespace=calendar_config['namespace'];
 
 		offset_time=datetime.today()-timedelta(hours=self.plugin.preferences['hours_past_midnight'])
@@ -82,7 +81,7 @@ class MainWindowExtension(WindowExtension):
 
 		text = '\n%s ' % strftime(self.plugin.preferences['timestamp_format']).lower();
 
-		ui = self.window.ui
+		ui = self.pageview
 		try:
 			#v0.65
 			path=ui.notebook.resolve_path(name);
@@ -99,17 +98,17 @@ class MainWindowExtension(WindowExtension):
 			page.set_parsetree(parsetree)
 
 		page.parse('wiki', text, append=True) # FIXME format hard coded ??? (this FIXME was copied from gui.__init__)
-		ui.present(path)
+		self.navigation.open_page(path)
 		ui.notebook.store_page(page);
 
 		# Move the cursor to the end of the line that was just appended...
-		textBuffer = self.window.pageview.view.get_buffer();
+		textBuffer = self.pageview.textview.get_buffer();
 		i = textBuffer.get_end_iter();
 		i.backward_visible_cursor_positions(1);
 		textBuffer.place_cursor(i);
 
 		# and finally... scroll the window all the way to the bottom.
-		self.window.pageview.scroll_cursor_on_screen();
+		self.pageview.scroll_cursor_on_screen();
 
 	def on_notebook_changed(self):
 		return None
