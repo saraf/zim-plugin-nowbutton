@@ -20,13 +20,13 @@ from datetime import datetime, timedelta
 from datetime import date as dateclass
 from codecs import getdecoder
 
-import gtk
 
 from zim.config import StringAllowEmpty
 from zim.plugins import PluginClass
 from zim.actions import action
 from zim.gui.pageview import PageViewExtension
 from zim.config import ConfigManager
+from gi.repository import Gtk as gtk
 
 
 logger = logging.getLogger('zim.plugins.nowbutton')
@@ -72,10 +72,7 @@ class NowButtonMainWindowExtension(PageViewExtension):
         def __init__(self, plugin, pageview):
                 PageViewExtension.__init__(self, plugin, pageview)
 
-        @action(
-                _('Log Entry'),
-                '<Primary><Shift>E'
-        ) # T: menu item
+        @action(_('Log Entry'), icon=gtk.STOCK_JUMP_TO, menuhints='view',accelerator='<Primary><Shift>J') # T: menu item
         def now_button_clicked(self):
 
                 calendar_config=ConfigManager.preferences['JournalPlugin']
